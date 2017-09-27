@@ -110,7 +110,7 @@ class BucketOpenList<in T : BucketNode>(private var bound: Double, private var f
         return BucketOpenList(initialBound, Double.MAX_VALUE)
     }
 
-    fun insert(element: T) {
+    private fun insert(element: T) {
         // minimum f value changes
         if(element.getFValue() < this.fMin) {
             fMin = element.getFValue()
@@ -121,24 +121,40 @@ class BucketOpenList<in T : BucketNode>(private var bound: Double, private var f
                 // there is an empty bucket to place the element into
                 if(knownEmptyBucket != null) {
                     knownEmptyBucket.nodes.add(element)
-                    knownEmptyBucket.nodes.indexOf(element)?.let { element.setIndex(it) }
-                    knownEmptyBucket.let { openList.add(it) }
+                    openList.add(knownEmptyBucket)
                 } else { // that empty bucket does not exist yet so make it
                     val newBucket = Bucket<T>(element.getFValue(), element.getGValue(),
                             element.getFValue() - element.getGValue(), ArrayList())
+                    newBucket.nodes.add(element)
                     lookUpTable[newGHPair] = newBucket
                     openList.add(newBucket)
                 }
             }
         } else {
             val newGHPair = GHPair(element.getGValue(), element.getFValue() - element.getGValue())
-            if (lookUpTable.containsKey(newGHPair)) { // node was in the lookup
-
-            } else { // node wasn't in the lookup
-
+            if (lookUpTable.containsKey(newGHPair)) { // bucket was in the lookup table
+                val knownNonEmptyBucket = lookUpTable[newGHPair]
+                if(knownNonEmptyBucket != null) {
+                    knownNonEmptyBucket.nodes.add(element)
+                    openList.add(knownNonEmptyBucket)
+                }
+            } else { // bucket was not in the lookup table
+                val newBucket = Bucket<T>(element.getFValue(), element.getGValue(),
+                        element.getFValue() - element.getGValue(), ArrayList())
+                newBucket.nodes.add(element)
+                lookUpTable[newGHPair] = newBucket
+                openList.add(newBucket)
             }
         }
     }
+
+    fun add(element: T) {
+        insert(element)
+    }
+
+//    fun checkFMin
+
+
 
     private val openList = AdvancedPriorityQueue<Bucket<T>>(10000000, potentialComparator(bound, fMin))
     private val lookUpTable = HashMap<GHPair, Bucket<T>>(10000000, 1.toFloat())
