@@ -7,12 +7,10 @@ import kotlin.collections.HashMap
 interface BucketNode {
     fun getFValue(): Double
     fun getGValue(): Double
-    fun getIndex(): Int
-    fun setIndex(i: Int)
     override fun toString(): String
 }
 
-class BucketOpenList<in T : BucketNode>(private var bound: Double, private var fMin: Double) {
+class BucketOpenList<T : BucketNode>(private var bound: Double, private var fMin: Double) {
 
     private class BucketOpenListException(message: String) : Exception(message)
 
@@ -152,7 +150,95 @@ class BucketOpenList<in T : BucketNode>(private var bound: Double, private var f
         insert(element)
     }
 
-//    fun checkFMin
+    fun checkFMin(): Boolean {
+        var fMinOk = Double.MAX_VALUE
+        val currentFMin = fMin
+        fun checkFMinValue(bucket: Bucket<T>) {
+            if (bucket.f < fMinOk) {
+                fMinOk = bucket.f
+            }
+        }
+        openList.forEach { bucket -> checkFMinValue(bucket) }
+        if (fMinOk < currentFMin) {
+            fMin = fMinOk
+            return false
+        }
+        return true
+    }
+
+    fun fixOpenList() { openList.reorder(potentialComparator(bound, fMin)) }
+
+    fun findFMind(): Double {
+        return fMin
+    }
+
+    fun isNotEmpty(): Boolean {
+        return (openList.size > 0)
+    }
+
+    fun validateFMin(): Double {
+        var validFMin = Double.MAX_VALUE
+        fun checkFminValue(bucket: Bucket<T>) {
+            if (bucket.f < validFMin) {
+                validFMin = bucket.f
+            }
+        }
+        openList.forEach { bucket -> checkFminValue(bucket) }
+        return validFMin
+    }
+
+    fun replace(element: T, replacement: T) {
+        val elementPair = GHPair(element.getGValue(), element.getFValue() - element.getGValue())
+        val bucketLookUp = lookUpTable[elementPair]
+        if (bucketLookUp != null) {
+            if(bucketLookUp.nodes.size > 0) {
+                val indexOfElement = bucketLookUp.nodes.indexOf(element)
+                bucketLookUp.nodes[indexOfElement] = replacement
+            }
+        } else {
+            insert(element)
+        }
+    }
+
+    private fun remove(): T? {
+        val remainingElements = openList.size
+        if (remainingElements == 0) {
+            throw BucketOpenListException("BucketOpenList.remove nothing left to remove!")
+        }
+        val topOfOpenList = openList.peek()
+        if (topOfOpenList?.nodes?.size == 0) {
+            // no nodes left we have to update fMin
+            val topCheck = validateFMin()
+            val nextBucket = openList.peek()
+            val nNode = nextBucket?.nodes?.get(nextBucket.nodes.size - 1)
+            nextBucket?.nodes?.remove(nNode)
+            if (topCheck < fMin) {
+                fMin = topCheck
+            }
+            openList.reorder(potentialComparator(bound, fMin))
+            return nNode
+        } else {
+            if (topOfOpenList?.nodes?.size == 1) {
+                val nNode = topOfOpenList.nodes[0]
+                topOfOpenList.nodes.remove(nNode)
+                val newTopOfOpen = openList.pop()
+                val topCheck = validateFMin()
+                if (topCheck < fMin) {
+                    fMin = topCheck
+                }
+                openList.reorder(potentialComparator(bound, fMin))
+                return nNode
+            } else {
+                val nNode = topOfOpenList?.nodes?.get(topOfOpenList.nodes.size - 1)
+                topOfOpenList?.nodes?.remove(nNode)
+                return nNode
+            }
+        }
+    }
+
+    fun chooseNode(): T? {
+        return remove()
+    }
 
 
 
