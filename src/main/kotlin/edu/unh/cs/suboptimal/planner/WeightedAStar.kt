@@ -14,7 +14,7 @@ class WeightedAStar<State, Action> {
         override var index: Int = -1
     }
 
-    class fComparator<State, Action> : Comparator<Node<State, Action>> {
+    class FComparator<State, Action> : Comparator<Node<State, Action>> {
         override fun compare(p0: Node<State, Action>?, p1: Node<State, Action>?): Int {
             if (p1 != null && p0 != null) {
                 when {
@@ -35,7 +35,7 @@ class WeightedAStar<State, Action> {
     }
 
     private var nodesExpanded = 0
-    private val openList = AdvancedPriorityQueue<Node<State, Action>>(10000000, fComparator())
+    private val openList = AdvancedPriorityQueue<Node<State, Action>>(10000000, FComparator())
     private val closedList = HashMap<State, Node<State, Action>>(10000000, 1.toFloat())
 
     fun run(initialState: State, initialAction: Action, goalCheck: (State) -> (Boolean),
@@ -68,7 +68,7 @@ class WeightedAStar<State, Action> {
                             openList.add(nodeLookUp)
                         }
                     } else {
-                        val newNode = Node(fValue, gValue, successor, curNode.action)
+                        val newNode = Node(fValue, gValue, successor, action)
                         openList.add(newNode)
                         closedList[successor] = newNode
                     }

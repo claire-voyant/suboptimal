@@ -1,5 +1,6 @@
 package edu.unh.cs.domain
 
+import edu.unh.cs.suboptimal.planner.DynPotentialSearch
 import edu.unh.cs.suboptimal.planner.WeightedAStar
 
 data class SlidingTileState(val tiles: ArrayList<Int>, var blank: Int)
@@ -61,6 +62,8 @@ class SlidingTilePuzzle(val height: Int, val width: Int, val bound: Float, val i
                         it, generateSuccessor((state.blank % width) > 0, state, state.blank - 1)))
                 SlidingTileAction.SOUTH -> constructedActions.add(constructedAction((state.blank < (15 - width)),
                         it, generateSuccessor((state.blank < (15 - width)), state, state.blank + width)))
+                else -> {
+                }
             }
         }
         val successors = ArrayList<SuccessorBundle<SlidingTileState, SlidingTileAction>>()
@@ -85,8 +88,6 @@ class SlidingTilePuzzle(val height: Int, val width: Int, val bound: Float, val i
             state
         }
     }
-
-
 }
 
 class SlidingTileSolver(val tilePuzzle: SlidingTilePuzzle) {
@@ -103,6 +104,22 @@ class SlidingTileSolver(val tilePuzzle: SlidingTilePuzzle) {
             tilePuzzle.heuristic(state)
         }
         WeightedAStar<SlidingTileState, SlidingTileAction>().run(initialState, SlidingTileAction.START,
+                isGoal, successorFunction, heuristicFunction)
+    }
+
+    fun runDPS(tilePuzzle: SlidingTilePuzzle, initialState: SlidingTileState) = {
+        println("SlidingTile.DynPotentialSearch")
+        val isGoal: (SlidingTileState) -> (Boolean) = { slidingTileState ->
+            tilePuzzle.isGoal(slidingTileState)
+        }
+        val successorFunction: (SlidingTileState) -> ArrayList<SuccessorBundle<SlidingTileState, SlidingTileAction>>
+                = { state ->
+            tilePuzzle.successors(state)
+        }
+        val heuristicFunction: (SlidingTileState) -> Double = { state ->
+            tilePuzzle.heuristicDps(state)
+        }
+        DynPotentialSearch<SlidingTileState, SlidingTileAction>(tilePuzzle.bound.toDouble()).run(initialState, SlidingTileAction.START,
                 isGoal, successorFunction, heuristicFunction)
     }
 }

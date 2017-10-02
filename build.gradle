@@ -2,7 +2,7 @@ group 'edu.unh.cs'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.1.4-3'
+    ext.kotlin_version = '1.1.51'
 
     repositories {
         mavenCentral()
@@ -27,6 +27,11 @@ if (project.hasProperty("mainClass")) {
     mainClassName = "edu.unh.cs.suboptimal.MainKt"
 }
 
+run {
+    if (project.hasProperty("arg1")) {
+        args = [arg1]
+    }
+}
 
 repositories {
     mavenCentral()
